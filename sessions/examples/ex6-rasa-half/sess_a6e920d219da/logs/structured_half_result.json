@@ -1,0 +1,29 @@
+{
+  "case": "reject-party",
+  "success": false,
+  "next_action": "escalate",
+  "summary": "rasa rejected: sorry, we can't accept this booking. reason: party_too_large",
+  "output": {
+    "rejected": true,
+    "reason": "sorry, we can't accept this booking. reason: party_too_large",
+    "rasa_response": [
+      {
+        "recipient_id": "homework-185d7d73",
+        "text": "Sorry, we can't accept this booking. Reason: party_too_large"
+      },
+      {
+        "recipient_id": "homework-185d7d73",
+        "text": "Is there anything else I can help you with?"
+      }
+    ],
+    "booking": {
+      "venue_id": "haymarket_tap",
+      "date": "2026-04-25",
+      "time": "19:30",
+      "party_size": 10,
+      "deposit_gbp": 200,
+      "duration_hours": 3,
+      "catering_tier": "bar_snacks"
+    }
+  }
+}

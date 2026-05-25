@@ -15,6 +15,7 @@ The grader checks that your validator normalises at least 3 of these
 
 from __future__ import annotations
 
+import hashlib
 import re
 from dataclasses import dataclass
 
@@ -49,34 +50,40 @@ class ValidationFailed(ValueError):  # noqa: N818
 # ---------------------------------------------------------------------------
 # TODO — normalise_booking_payload
 # ---------------------------------------------------------------------------
+
+
 def normalise_booking_payload(raw: dict) -> dict:
     """Take a data dict from the loop half's handoff and produce a Rasa-shaped message."""
-    import hashlib
-
     if not isinstance(raw, dict):
         raise ValidationFailed(f"expected dict, got {type(raw).__name__}")
 
+    # 1. Venue ID
     venue_id_raw = raw.get("venue_id")
     if not venue_id_raw:
         raise ValidationFailed("missing venue_id")
     venue_id = canonicalise_venue_id(venue_id_raw)
 
+    # 2. Date
     date_raw = raw.get("date")
     if not date_raw:
         raise ValidationFailed("missing date")
     date_iso = _normalise_date(date_raw)
 
+    # 3. Time
     time_raw = raw.get("time")
     if not time_raw:
         raise ValidationFailed("missing time")
     time_24h = parse_time_24h(time_raw)
 
+    # 4. Party Size
     party = parse_party_size(raw.get("party_size"))
 
+    # 5. Deposit (Default 0)
     deposit = 0
     if raw.get("deposit") is not None:
         deposit = parse_currency_gbp(raw["deposit"])
 
+    # Duration and Catering
     duration = raw.get("duration_hours", 3)
     if isinstance(duration, str) and duration.isdigit():
         duration = int(duration)
@@ -87,6 +94,7 @@ def normalise_booking_payload(raw: dict) -> dict:
     if catering not in ("drinks_only", "bar_snacks", "sit_down_meal", "three_course_meal"):
         catering = "bar_snacks"
 
+    # Hashing for sender ID
     stable_suffix = hashlib.sha1(f"{venue_id}-{date_iso}-{time_24h}".encode()).hexdigest()[:8]
 
     return {
@@ -206,7 +214,9 @@ def parse_time_24h(raw: str) -> str:
 def canonicalise_venue_id(raw: str) -> str:
     """'Haymarket Tap' → 'haymarket_tap'. Leaves 'haymarket_tap' unchanged."""
     s = str(raw).strip().lower()
+    # Replace spaces and hyphens with underscores
     s = re.sub(r"[\s\-]+", "_", s)
+    # Remove any character that is not a lowercase letter, number, or underscore
     s = re.sub(r"[^a-z0-9_]", "", s)
     return s
 

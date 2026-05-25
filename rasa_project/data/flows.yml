@@ -39,14 +39,14 @@ flows:
       /confirm_booking with booking metadata.
     steps:
       - id: validate
-        action: action_validate_booking
+        action: action_validate_booking #MO: thinking custom action, request to Terminal 1(actions.py)
         next:
           - if: "slots.validation_error is not null"
             then: rejected
           - else: confirmed
       - id: rejected
-        action: utter_booking_rejected
+        action: utter_booking_rejected #MO: talking action. Rasa looks in domain.yml
         next: END
       - id: confirmed
-        action: utter_booking_confirmed
+        action: utter_booking_confirmed #MO: talking action. Rasa looks in domain.yml
         next: END

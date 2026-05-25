@@ -3,14 +3,14 @@
 Two modes:
   * text mode: stdin → manager → stdout. Free, no mic needed.
   * voice mode: mic → Speechmatics realtime STT → manager →
-    Rime.ai Arcana TTS → speakers.
+    ElevenLabs TTS → speakers.
 
 Both modes write identical trace events so downstream grading
 doesn't care which ran.
 
 Voice mode degrades gracefully:
   - No SPEECHMATICS_KEY        → text mode with warning
-  - No RIME_API_KEY            → voice STT, but manager replies printed not spoken
+  - No ELEVENLABS_API_KEY      → voice STT, but manager replies printed not spoken
   - speechmatics-python missing → text mode with install hint
   - No mic / no playback       → attempted run; errors surface clearly
 """
@@ -78,15 +78,16 @@ async def run_text_mode(session: Session, persona: ManagerPersona, max_turns: in
 
 
 # ---------------------------------------------------------------------------
-# Voice mode — real Speechmatics STT + Rime Arcana TTS
+# Voice mode — real Speechmatics STT + ElevenLabs TTS
 # ---------------------------------------------------------------------------
 async def run_voice_mode(session: Session, persona: ManagerPersona, max_turns: int = 6) -> None:
     """Voice mode. Real mic capture → Speechmatics STT → manager → Rime TTS."""
 
     # ── preflight: keys + deps ─────────────────────────────────────
+    # speechmatics_key = os.environ.get("SPEECHMATICS_KEY", "").strip()
+    # rime_key = os.environ.get("RIME_API_KEY", "").strip()
     speechmatics_key = os.environ.get("SPEECHMATICS_KEY", "").strip()
-    rime_key = os.environ.get("RIME_API_KEY", "").strip()
-
+    elevenlabs_key = os.environ.get("ELEVENLABS_API_KEY", "").strip()
     if not speechmatics_key:
         print(
             "⚠  SPEECHMATICS_KEY not set — falling back to text mode.\n"
@@ -117,10 +118,16 @@ async def run_voice_mode(session: Session, persona: ManagerPersona, max_turns: i
         return
 
     # Rime is optional — we fall through to text-reply-only if missing
-    rime_enabled = bool(rime_key)
-    if not rime_enabled:
+    # rime_enabled = bool(rime_key)
+    # if not rime_enabled:
+    #     print(
+    #         "ℹ  RIME_API_KEY not set — manager replies will be printed, not spoken.",
+    #         file=sys.stderr,
+    #     )
+    tts_enabled = bool(elevenlabs_key)
+    if not tts_enabled:
         print(
-            "ℹ  RIME_API_KEY not set — manager replies will be printed, not spoken.",
+            "ℹ  ELEVENLABS_API_KEY not set — manager replies will be printed, not spoken.",
             file=sys.stderr,
         )
 
@@ -200,9 +207,16 @@ async def run_voice_mode(session: Session, persona: ManagerPersona, max_turns: i
         )
 
         # ── speak reply via Rime TTS (if enabled) ──────────────────
-        if rime_enabled:
+        # if rime_enabled:
+        #     try:
+        #         await _speak_rime(manager_text, rime_key, sd)
+        #     except Exception as e:  # noqa: BLE001
+        #         print(f"   ⚠ TTS playback failed: {e} (continuing)", file=sys.stderr)
+
+        # ── speak reply via ElevenLabs TTS (if enabled) ────────────
+        if tts_enabled:
             try:
-                await _speak_rime(manager_text, rime_key, sd)
+                await _speak_elevenlabs(manager_text, elevenlabs_key, sd)
             except Exception as e:  # noqa: BLE001
                 print(f"   ⚠ TTS playback failed: {e} (continuing)", file=sys.stderr)
 
@@ -335,53 +349,89 @@ async def _transcribe_speechmatics(
     return " ".join(transcripts).strip()
 
 
-# ---------------------------------------------------------------------------
-# Rime.ai Arcana TTS + playback
-# ---------------------------------------------------------------------------
-async def _speak_rime(text: str, api_key: str, sd) -> None:
-    """Call Rime.ai TTS, get MP3 back, play it."""
-    import httpx
+# # ---------------------------------------------------------------------------
+# # Rime.ai Arcana TTS + playback
+# # ---------------------------------------------------------------------------
+# async def _speak_rime(text: str, api_key: str, sd) -> None:
+#     """Call Rime.ai TTS, get MP3 back, play it."""
+#     import httpx
 
-    url = "https://users.rime.ai/v1/rime-tts"
-    payload = {
-        "speaker": "luna",  # an Arcana voice; change if Rime renames
-        "text": text,
-        "modelId": "arcana",
-        "audioFormat": "mp3",
-    }
+#     url = "https://users.rime.ai/v1/rime-tts"
+#     payload = {
+#         "speaker": "luna",  # an Arcana voice; change if Rime renames
+#         "text": text,
+#         "modelId": "arcana",
+#         "audioFormat": "mp3",
+#     }
+#     headers = {
+#         "Authorization": f"Bearer {api_key}",
+#         "Content-Type": "application/json",
+#         "Accept": "audio/mp3",
+#     }
+
+#     async with httpx.AsyncClient(timeout=30.0) as http:
+#         resp = await http.post(url, json=payload, headers=headers)
+#         if resp.status_code != 200:
+#             # Rime sends JSON error for 4xx
+#             raise RuntimeError(f"Rime {resp.status_code}: {resp.text[:200]}")
+#         mp3_bytes = resp.content
+
+#     # Decode MP3 → PCM via pydub (stdlib can't handle mp3)
+#     try:
+#         from io import BytesIO
+
+#         from pydub import AudioSegment  # type: ignore[import-not-found]
+#     except ImportError:
+#         print(
+#             "   (pydub not installed; can't decode mp3 for playback — "
+#             "install with: uv sync --extra voice)",
+#             file=sys.stderr,
+#         )
+#         return
+
+#     segment = AudioSegment.from_file(BytesIO(mp3_bytes), format="mp3")
+#     # Resample + convert to int16 mono for sounddevice
+#     segment = segment.set_frame_rate(SAMPLE_RATE).set_channels(1).set_sample_width(2)
+
+#     import numpy as np
+
+#     samples = np.array(segment.get_array_of_samples(), dtype=np.int16)
+#     sd.play(samples, samplerate=SAMPLE_RATE)
+#     sd.wait()
+
+
+# ---------------------------------------------------------------------------
+# ElevenLabs TTS + playback
+# ---------------------------------------------------------------------------
+async def _speak_elevenlabs(text: str, api_key: str, sd) -> None:
+    """Call ElevenLabs TTS REST, get PCM back at SAMPLE_RATE, play it.
+
+    Voice and model overridable via env:
+      ELEVENLABS_VOICE_ID   (default: 'JBFqnCBsd6RMkjVDRZzb' — George, mature British male)
+      ELEVENLABS_MODEL_ID   (default: 'eleven_turbo_v2_5')
+    """
+    import httpx
+    import numpy as np
+
+    voice_id = os.environ.get("ELEVENLABS_VOICE_ID", "").strip() or "JBFqnCBsd6RMkjVDRZzb"
+    model_id = os.environ.get("ELEVENLABS_MODEL_ID", "").strip() or "eleven_turbo_v2_5"
+
+    url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+    params = {"output_format": f"pcm_{SAMPLE_RATE}"}  # 16-bit PCM @ our SAMPLE_RATE
+    payload = {"text": text, "model_id": model_id}
     headers = {
-        "Authorization": f"Bearer {api_key}",
+        "xi-api-key": api_key,
         "Content-Type": "application/json",
-        "Accept": "audio/mp3",
+        "Accept": "audio/pcm",
     }
 
     async with httpx.AsyncClient(timeout=30.0) as http:
-        resp = await http.post(url, json=payload, headers=headers)
+        resp = await http.post(url, params=params, json=payload, headers=headers)
         if resp.status_code != 200:
-            # Rime sends JSON error for 4xx
-            raise RuntimeError(f"Rime {resp.status_code}: {resp.text[:200]}")
-        mp3_bytes = resp.content
+            raise RuntimeError(f"ElevenLabs {resp.status_code}: {resp.text[:200]}")
+        pcm_bytes = resp.content
 
-    # Decode MP3 → PCM via pydub (stdlib can't handle mp3)
-    try:
-        from io import BytesIO
-
-        from pydub import AudioSegment  # type: ignore[import-not-found]
-    except ImportError:
-        print(
-            "   (pydub not installed; can't decode mp3 for playback — "
-            "install with: uv sync --extra voice)",
-            file=sys.stderr,
-        )
-        return
-
-    segment = AudioSegment.from_file(BytesIO(mp3_bytes), format="mp3")
-    # Resample + convert to int16 mono for sounddevice
-    segment = segment.set_frame_rate(SAMPLE_RATE).set_channels(1).set_sample_width(2)
-
-    import numpy as np
-
-    samples = np.array(segment.get_array_of_samples(), dtype=np.int16)
+    samples = np.frombuffer(pcm_bytes, dtype=np.int16)
     sd.play(samples, samplerate=SAMPLE_RATE)
     sd.wait()
 

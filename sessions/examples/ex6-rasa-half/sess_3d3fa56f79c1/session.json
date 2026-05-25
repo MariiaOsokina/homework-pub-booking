@@ -1,0 +1,48 @@
+{
+  "session_id": "sess_3d3fa56f79c1",
+  "version": 1,
+  "created_at": "2026-05-22T23:58:31.215028+00:00",
+  "updated_at": "2026-05-22T23:58:31.902068+00:00",
+  "scenario": "ex6-rasa",
+  "state": "failed",
+  "user_id": null,
+  "current_half": "loop",
+  "planner": {},
+  "executor": {},
+  "structured": {
+    "last_result": {
+      "rejected": true,
+      "reason": "sorry, we can't accept this booking. reason: deposit_too_high",
+      "rasa_response": [
+        {
+          "recipient_id": "homework-185d7d73",
+          "text": "I'm sorry, I'm not trained to help with that."
+        },
+        {
+          "recipient_id": "homework-185d7d73",
+          "text": "Sorry, we can't accept this booking. Reason: deposit_too_high"
+        },
+        {
+          "recipient_id": "homework-185d7d73",
+          "text": "Is there anything else I can help you with?"
+        }
+      ],
+      "booking": {
+        "venue_id": "haymarket_tap",
+        "date": "2026-04-25",
+        "time": "19:30",
+        "party_size": 6,
+        "deposit_gbp": 400,
+        "duration_hours": 3,
+        "catering_tier": "bar_snacks"
+      }
+    },
+    "case": "reject-deposit"
+  },
+  "memory": {},
+  "handoff_history": [],
+  "bare_mode": false,
+  "config_overrides": {},
+  "result": null,
+  "resumed_from": null
+}

@@ -1,0 +1,29 @@
+{
+  "case": "happy",
+  "success": true,
+  "next_action": "complete",
+  "summary": "booking confirmed by rasa (ref=BK-7D401E9E)",
+  "output": {
+    "committed": true,
+    "booking": {
+      "venue_id": "haymarket_tap",
+      "date": "2026-04-25",
+      "time": "19:30",
+      "party_size": 6,
+      "deposit_gbp": 200,
+      "duration_hours": 3,
+      "catering_tier": "bar_snacks"
+    },
+    "booking_reference": "BK-7D401E9E",
+    "rasa_response": [
+      {
+        "recipient_id": "homework-185d7d73",
+        "text": "Booking confirmed. Reference: BK-7D401E9E."
+      },
+      {
+        "recipient_id": "homework-185d7d73",
+        "text": "Is there anything else I can help you with?"
+      }
+    ]
+  }
+}

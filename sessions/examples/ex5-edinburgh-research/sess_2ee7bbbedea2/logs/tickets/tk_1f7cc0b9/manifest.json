@@ -1,0 +1,20 @@
+{
+  "ticket_id": "tk_1f7cc0b9",
+  "operation": "executor.run_subgoal/sg_1",
+  "started_at": "2026-05-22T22:49:01.273158+00:00",
+  "completed_at": "2026-05-22T22:49:55.798523+00:00",
+  "duration_ms": 54525,
+  "outputs": [
+    {
+      "path": "/home/mosokina/Nebius_LLM/Agents-Week5/sessions/examples/ex5-edinburgh-research/sess_2ee7bbbedea2/logs/tickets/tk_1f7cc0b9/raw_output.json",
+      "sha256": "2bc825266455fd84fe42f0d69f54b9c9c8dda085c4aa7f162310fd5fae4b9cdf",
+      "size_bytes": 1999,
+      "content_type": "application/json"
+    }
+  ],
+  "metrics": {
+    "tool_calls": 5,
+    "turns_used": 5,
+    "handoff_requested": false
+  }
+}

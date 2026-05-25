@@ -64,7 +64,9 @@ class RasaStructuredHalf(StructuredHalf):
             "error_codes": ["SA_EXT_SERVICE_UNAVAILABLE", "SA_EXT_TIMEOUT"],
             "examples": [
                 {
-                    "input": {"data": {"action": "confirm_booking", "deposit_gbp": 200}},
+                    "input": {
+                        "data": {"action": "confirm_booking", "deposit_gbp": 200}
+                    },  # MO: is deposit correct?
                     "output": {"success": True, "next_action": "complete"},
                 }
             ],
@@ -83,6 +85,7 @@ class RasaStructuredHalf(StructuredHalf):
             )
 
         try:
+            # 1. Normalise the payload using your validator.py
             rasa_msg = normalise_booking_payload(data)
         except Exception as e:  # noqa: BLE001
             return HalfResult(
@@ -93,6 +96,8 @@ class RasaStructuredHalf(StructuredHalf):
             )
 
         booking = rasa_msg["metadata"]["booking"]
+
+        # 2. Construct the request body as a JSON string encoded in utf-8
         body = json.dumps(
             {
                 "sender": rasa_msg["sender"],
@@ -100,6 +105,8 @@ class RasaStructuredHalf(StructuredHalf):
                 "metadata": {"booking": booking},
             }
         ).encode("utf-8")
+
+        # 3. Create the HTTP POST request object
         req = urllib_request.Request(
             self.rasa_url,
             data=body,
@@ -108,6 +115,7 @@ class RasaStructuredHalf(StructuredHalf):
         )
 
         try:
+            # 4. Execute the blocking urllib call in an async thread pool
             raw_response = await asyncio.get_event_loop().run_in_executor(
                 None,
                 lambda: urllib_request.urlopen(req, timeout=self.request_timeout_s).read(),
@@ -155,10 +163,12 @@ class RasaStructuredHalf(StructuredHalf):
                 next_action="escalate",
             )
 
+        # 5. Parse the Rasa response array
         confirmed = False
         rejected = False
         rejection_reason = ""
         booking_reference = None
+
         for m in messages:
             if not isinstance(m, dict):
                 continue
@@ -176,6 +186,7 @@ class RasaStructuredHalf(StructuredHalf):
                 rejected = True
                 rejection_reason = text or "rejected by rasa"
 
+        # 6. Return the appropriate HalfResult based on the parsed response
         if confirmed and not rejected:
             return HalfResult(
                 success=True,

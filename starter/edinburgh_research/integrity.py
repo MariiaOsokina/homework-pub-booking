@@ -65,7 +65,7 @@ def extract_money_facts(text: str) -> list[str]:
     """Find all £<number> occurrences, HTML tags stripped or not."""
     # Strip HTML tags first so e.g. <dd>£540</dd> matches cleanly.
     stripped = re.sub(r"<[^>]+>", " ", text)
-    return re.findall(r"£\d+(?:\.\d+)?", stripped)
+    return re.findall(r"£\s*\d+(?:\.\d+)?", stripped)  # fixed
 
 
 def extract_temperature_facts(text: str) -> list[str]:
@@ -109,22 +109,26 @@ def fact_appears_in_log(fact: Any, log: list[ToolCallRecord] | None = None) -> b
             return any(_scan(v) for v in obj)
         return False
 
-    return any(_scan(r.output) or _scan(r.arguments) for r in records)
+    # return any(_scan(r.output) or _scan(r.arguments) for r in records)
+    # FIX: ONLY scan r.output. Do NOT scan r.arguments!
+    return any(_scan(r.output) for r in records)
+
+    # MO: If you check arguments, you'd accept facts that were inputs to tools, not outputs. Example:
+    # LLM passes party_size=99 to calculate_cost
+    # Tool rejects it and returns error
+    # But if you scan arguments, 99 appears "verified" even though the tool never confirmed it!
 
 
-# ---------------------------------------------------------------------------
-# verify_dataflow — the main check
-# ---------------------------------------------------------------------------
 def verify_dataflow(flyer_content: str) -> IntegrityResult:
-    if not flyer_content or not flyer_content.strip():
-        return IntegrityResult(ok=True, summary="no facts to verify (empty flyer)")
+    """Check that concrete facts in the flyer appear in the tool call log."""
 
+    # 1. Extract concrete facts from the generated HTML
     facts_to_check: list[str] = []
     facts_to_check.extend(extract_money_facts(flyer_content))
     facts_to_check.extend(extract_temperature_facts(flyer_content))
     facts_to_check.extend(extract_condition_facts(flyer_content))
 
-    # De-dupe while preserving order
+    # 2. De-dupe while preserving order
     seen: set[str] = set()
     deduped: list[str] = []
     for f in facts_to_check:
@@ -133,19 +137,24 @@ def verify_dataflow(flyer_content: str) -> IntegrityResult:
             seen.add(key)
             deduped.append(f)
 
+    # 3. Handle edge case: No facts found
     if not deduped:
         return IntegrityResult(
             ok=True, summary="no extractable facts in flyer (verified vacuously)"
         )
 
+    # 4. Verify each fact against the global _TOOL_CALL_LOG
     verified: list[str] = []
     unverified: list[str] = []
+
     for fact in deduped:
+        # fact_appears_in_log does a scalar-match (tolerating leading £, trailing C, etc.)
         if fact_appears_in_log(fact):
             verified.append(fact)
         else:
             unverified.append(fact)
 
+    # 5. Return failure if there are any fabrications
     if unverified:
         return IntegrityResult(
             ok=False,
@@ -157,6 +166,7 @@ def verify_dataflow(flyer_content: str) -> IntegrityResult:
             ),
         )
 
+    # 6. Return success if all facts are rooted in tool outputs
     return IntegrityResult(
         ok=True,
         verified_facts=verified,

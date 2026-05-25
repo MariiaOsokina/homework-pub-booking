@@ -1,0 +1,44 @@
+{
+  "session_id": "sess_39131c77121d",
+  "version": 1,
+  "created_at": "2026-05-22T23:51:17.691060+00:00",
+  "updated_at": "2026-05-22T23:51:23.080225+00:00",
+  "scenario": "ex6-rasa",
+  "state": "completed",
+  "user_id": null,
+  "current_half": "loop",
+  "planner": {},
+  "executor": {},
+  "structured": {
+    "last_result": {
+      "committed": true,
+      "booking": {
+        "venue_id": "haymarket_tap",
+        "date": "2026-04-25",
+        "time": "19:30",
+        "party_size": 6,
+        "deposit_gbp": 200,
+        "duration_hours": 3,
+        "catering_tier": "bar_snacks"
+      },
+      "booking_reference": "BK-7D401E9E",
+      "rasa_response": [
+        {
+          "recipient_id": "homework-185d7d73",
+          "text": "Booking confirmed. Reference: BK-7D401E9E."
+        },
+        {
+          "recipient_id": "homework-185d7d73",
+          "text": "Is there anything else I can help you with?"
+        }
+      ]
+    },
+    "case": "happy"
+  },
+  "memory": {},
+  "handoff_history": [],
+  "bare_mode": false,
+  "config_overrides": {},
+  "result": null,
+  "resumed_from": null
+}

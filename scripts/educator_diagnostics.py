@@ -262,9 +262,17 @@ def section_service_auth(quick: bool) -> Section:
                         "https://api.tokenfactory.nebius.com/v1/",
                     ),
                 )
+                # return await asyncio.wait_for(
+                #     client.chat.completions.create(
+                #         model=env_vars.get("NEBIUS_SMOKE_MODEL", "google/gemma-2-2b-it"),
+                #         messages=[{"role": "user", "content": "ok"}],
+                #         max_tokens=3,
+                #     ),
+                #     timeout=15.0,
+                # )
                 return await asyncio.wait_for(
                     client.chat.completions.create(
-                        model=env_vars.get("NEBIUS_SMOKE_MODEL", "google/gemma-2-2b-it"),
+                        model=env_vars.get("NEBIUS_SMOKE_MODEL", "google/gemma-3-27b-it"),
                         messages=[{"role": "user", "content": "ok"}],
                         max_tokens=3,
                     ),

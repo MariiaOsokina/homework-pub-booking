@@ -6,9 +6,9 @@
 
 # ── Session artifacts ────────────────────────────────────────────────
 # Sessions contain API output and should not be committed.
-sessions/
+# sessions/ #MO muted
 demo_sessions_*/
-*.session.json
+# *.session.json #MO: muted
 
 # ── Python standard ──────────────────────────────────────────────────
 __pycache__/

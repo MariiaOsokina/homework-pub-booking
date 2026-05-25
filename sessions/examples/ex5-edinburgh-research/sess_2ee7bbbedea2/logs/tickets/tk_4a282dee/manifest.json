@@ -1,0 +1,21 @@
+{
+  "ticket_id": "tk_4a282dee",
+  "operation": "planner.plan",
+  "started_at": "2026-05-22T22:48:44.458520+00:00",
+  "completed_at": "2026-05-22T22:49:01.224438+00:00",
+  "duration_ms": 16765,
+  "outputs": [
+    {
+      "path": "/home/mosokina/Nebius_LLM/Agents-Week5/sessions/examples/ex5-edinburgh-research/sess_2ee7bbbedea2/logs/tickets/tk_4a282dee/raw_output.json",
+      "sha256": "20e56f181c143a58ddecef1750b313be43886bffb103dd533fd51004c67fd4e7",
+      "size_bytes": 1212,
+      "content_type": "application/json"
+    }
+  ],
+  "metrics": {
+    "num_subgoals": 2,
+    "llm_tokens_in": 777,
+    "llm_tokens_out": 2960,
+    "llm_model": "Qwen/Qwen3-Next-80B-A3B-Thinking"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "ticket_id": "tk_ebdb041a",
+  "operation": "executor.run_subgoal/sg_1",
+  "started_at": "2026-05-24T11:36:31.411418+00:00",
+  "completed_at": "2026-05-24T11:36:31.418283+00:00",
+  "duration_ms": 6,
+  "outputs": [
+    {
+      "path": "/home/mosokina/Nebius_LLM/Agents-Week5/sessions/examples/ex7-handoff-bridge/sess_307899a4b640/logs/tickets/tk_ebdb041a/raw_output.json",
+      "sha256": "963936591e8325e10ac784304c2ae4f56b9096a52e37f24738d843a8321c462d",
+      "size_bytes": 1626,
+      "content_type": "application/json"
+    }
+  ],
+  "metrics": {
+    "tool_calls": 2,
+    "turns_used": 2,
+    "handoff_requested": true
+  }
+}

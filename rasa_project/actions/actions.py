@@ -115,7 +115,7 @@ class ActionValidateBooking(Action):
         except (TypeError, ValueError):
             return slot_events + [SlotSet("validation_error", "invalid_deposit")]
 
-        # Rule checks
+        # Implement Rule checks
         if party_int > MAX_PARTY_SIZE_FOR_AUTO_BOOKING:
             return slot_events + [SlotSet("validation_error", "party_too_large")]
 
@@ -129,7 +129,7 @@ class ActionValidateBooking(Action):
             .hexdigest()[:8]
             .upper()
         )
-
+        
         return slot_events + [
             SlotSet("validation_error", None),
             SlotSet("booking_reference", ref),

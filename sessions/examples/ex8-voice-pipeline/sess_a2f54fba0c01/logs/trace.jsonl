@@ -1,0 +1,8 @@
+{"event_type": "voice.utterance_in", "actor": "user", "timestamp": "2026-05-24T22:11:01.373239+00:00", "payload": {"text": "Hi, I'd like to book a table for 6 next Friday at 7:30pm.", "turn": 0, "mode": "text"}}
+{"event_type": "voice.utterance_out", "actor": "manager", "timestamp": "2026-05-24T22:11:14.715106+00:00", "payload": {"text": "Aye, we can do that. I'll pencil you in for next Friday at 7:30pm. What's the contact number?", "turn": 0, "mode": "text"}}
+{"event_type": "voice.utterance_in", "actor": "user", "timestamp": "2026-05-24T22:11:26.025567+00:00", "payload": {"text": "07700 900123. We'll put down a \u00a3150 deposit.", "turn": 1, "mode": "text"}}
+{"event_type": "voice.utterance_out", "actor": "manager", "timestamp": "2026-05-24T22:11:28.887748+00:00", "payload": {"text": "Aye, that's fine. I've got you booked. See you next Friday.", "turn": 1, "mode": "text"}}
+{"event_type": "voice.utterance_in", "actor": "user", "timestamp": "2026-05-24T22:11:42.038981+00:00", "payload": {"text": "Actually, my friend just texted \u2014 it'll be 12 of us now, not 6. Still alright?", "turn": 2, "mode": "text"}}
+{"event_type": "voice.utterance_out", "actor": "manager", "timestamp": "2026-05-24T22:11:43.067047+00:00", "payload": {"text": "Sorry, too many. Try The Royal Oak, they can handle bigger groups.", "turn": 2, "mode": "text"}}
+{"event_type": "voice.utterance_in", "actor": "user", "timestamp": "2026-05-24T22:11:52.459802+00:00", "payload": {"text": "Fair enough. Thanks Alasdair.", "turn": 3, "mode": "text"}}
+{"event_type": "voice.utterance_out", "actor": "manager", "timestamp": "2026-05-24T22:11:52.999445+00:00", "payload": {"text": "No bother, good luck with the booking elsewhere.", "turn": 3, "mode": "text"}}

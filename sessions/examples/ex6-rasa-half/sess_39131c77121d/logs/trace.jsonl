@@ -1,0 +1,1 @@
+{"event_type": "structured_half.completed", "actor": "rasa", "timestamp": "2026-05-22T23:51:23.074124+00:00", "payload": {"case": "happy", "success": true, "next_action": "complete", "booking_reference": "BK-7D401E9E", "summary": "booking confirmed by rasa (ref=BK-7D401E9E)"}}

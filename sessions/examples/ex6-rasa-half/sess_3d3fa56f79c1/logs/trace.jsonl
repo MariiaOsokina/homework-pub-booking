@@ -1,0 +1,1 @@
+{"event_type": "structured_half.completed", "actor": "rasa", "timestamp": "2026-05-22T23:58:31.893369+00:00", "payload": {"case": "reject-deposit", "success": false, "next_action": "escalate", "booking_reference": null, "summary": "rasa rejected: sorry, we can't accept this booking. reason: deposit_too_high"}}
