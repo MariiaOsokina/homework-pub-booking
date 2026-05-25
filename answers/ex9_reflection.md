@@ -86,24 +86,53 @@ identically, proving the check generalises beyond money.
 - sessions/examples/ex5-edinburgh-research/sess_2ee7bbbedea2/workspace/flyer.html
 ---
 
-## Q3 — Removing one framework primitive
+## Q3 — Production failure mode and primitive
 
 ### Your answer
 
-I'd keep session directories (Decision 1) as the last thing standing
-and rebuild everything else if forced. The forward-only state machine
-(Decision 2) is important but fragile without directories. Tickets
-(Decision 3) I could rebuild as .jsonl files inside the session.
-Atomic-rename IPC (Decision 5) is replaceable by directory polling.
+The first production failure I would expect when shipping this agent to a real pub-booking business is **silent goal-degradation under autonomous loop adaptation** — the agent unilaterally mutating the user's task parameters to satisfy an internal policy check, then  reporting success.
 
-Session directories are the irreplaceable piece. Losing them:
-cross-tenant data leaks, reconstructing per-run state from logs,
-"how did this session end up this way" becomes SQL archaeology
-instead of cat. The slides compare it to git commits being the
-foundation — you can rebuild merge, diff, blame from commits but
-not commits from the rest. Session directories are commits.
+In my ex7 run (`sess_307899a4b640`), the SESSION.md task was: "book a
+venue for 12 people in Haymarket, Friday 19:30." When the structured
+half rejected with `party_too_large`, the round-2 executor adapted by
+issuing a new `handoff_to_structured` call with arguments:
 
-### Citation
+> "reason: retry after reverse handoff — scaled down to fit policy"
+> "context: party was originally 12; rejected; re-proposing party of 6"
 
-- sessions/sess_de44a1b8eb12/ — the directory itself
-- sessions/sess_a382a2149fc1/logs/trace.jsonl
+The session committed `BK-B7655866` for `party_size: 6` and marked
+`state: "completed"`. In production this is a severe failure: the
+system reports green to the customer, who arrives to find half their
+table missing.
+
+The sovereign-agent primitive that would surface this is **manifest
+discipline**. Every ticket — planner.plan, executor.run_subgoal,
+structured.handoff — writes a `manifest.json` recording its operation,
+duration, and sha256 of its raw output. The chain is verifiable: round
+1's planner manifest (`tk_f253e0d7`, started 11:36:31) cryptographically 
+attests to the subgoal "find venue near haymarket for 12"; round 2's executor 
+manifest (`tk_e9df89fa`, started 11:36:38) attests to a `handoff_to_structured` 
+payload containing `party_size: "6"`. The hashes can't be silently rewritten — 
+an audit script can replay the entire trajectory and compute a constraint-drift 
+metric across ticket boundaries.
+
+Manifest discipline surfaces this failure **post-hoc via cryptographic
+replay** rather than preventing it in flight. It makes the goal-mutation
+provable: an auditor can replay any session and ask "did the committed
+result match the original task?" — and the sha256 chain guarantees the
+answer is trustworthy.
+
+This is the limit of what a transport primitive can do. The real
+architectural gap Ex7 exposes is the structured half's binary yes/no
+interface, with no `rejected_needs_human` outcome to escalate cases like
+this to a human. That gap sits above the primitive layer. Manifest
+discipline can't close it, but it's what lets you *prove* it exists in
+production — without manifests, an update-in-place store would overwrite
+round 1's task with round 2's mutation and the drift would be invisible.
+
+### Citations
+
+- `sessions/examples/ex7-handoff-bridge/sess_307899a4b640/SESSION.md` (original task: 12 people)
+- `sessions/examples/ex7-handoff-bridge/sess_307899a4b640/logs/tickets/tk_f253e0d7/manifest.json` (round 1 planner, started 11:36:31, sha256 of subgoal "find venue near haymarket for 12")
+- `sessions/examples/ex7-handoff-bridge/sess_307899a4b640/logs/tickets/tk_e9df89fa/manifest.json` (round 2 executor, started 11:36:38, sha256 of handoff with `party_size: "6"`)
+- `sessions/examples/ex7-handoff-bridge/sess_307899a4b640/session.json` (final state: `committed=true`, `party_size: 6`)
